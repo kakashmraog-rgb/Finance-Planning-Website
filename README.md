@@ -14,6 +14,4 @@ A local Flask web app that compares debt repayment and retirement-investment pat
 
 This is an educational projection, not financial advice, a guarantee, or a complete financial plan. It deliberately does not model taxes, insurance, emergency reserves, investment fees, loan fees, or market volatility.
 
-## Tests
 
-Run `python -m unittest -v`.
