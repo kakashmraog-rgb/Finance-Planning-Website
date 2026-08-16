@@ -2,12 +2,7 @@
 
 A local Flask web app that compares debt repayment and retirement-investment paths.
 
-## Run it
 
-1. Create and activate a Python virtual environment.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Start the app: `python app.py`
-4. Open `http://127.0.0.1:5000`.
 
 ## Planning model
 
