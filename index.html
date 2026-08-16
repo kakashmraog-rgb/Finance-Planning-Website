@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>>Fix your finance — A tool to fix your personal finances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+  <section class="hero"><span class="eyebrow">Personal financial map</span><h1>Fix your finance</h1><h2><br><em>— A Tool to Fix Your Personal Finances.</em></h2><p>See how your income, living costs, debt and investing can work together on the road to retirement.</p></section>
+  <section class="planner">
+    <div class="form-card"><h2>Build your plan</h2><p class="muted">All amounts are monthly and in Indian rupees (₹).</p>
+      {% if errors %}<div class="errors"><strong>Please review:</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+      <form method="post" novalidate>
+        <div class="grid"><label>Current age<input name="age" type="number" min="18" max="75" value="{{ form.age }}" required></label><label>Retirement age<input name="retirement_age" type="number" min="40" max="90" value="{{ form.retirement_age }}" required></label>
+        <label>Monthly income<input name="income" type="number" min="1" value="{{ form.income }}" required></label><label>Monthly expenses<input name="expenses" type="number" min="0" value="{{ form.expenses }}" required></label>
+        <label>Work sector<select name="sector">{% for key, name in [('technology','Technology'),('finance','Finance'),('healthcare','Healthcare'),('education','Education'),('government','Government'),('manufacturing','Manufacturing'),('other','Other')] %}<option value="{{ key }}" {% if form.sector == key %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label><label>Location type<select name="location">{% for key, name in [('metro','Metro'),('large_city','Large city'),('small_city','Small city'),('town_rural','Town / rural')] %}<option value="{{ key }}" {% if form.location == key %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+        <label>Outstanding loan<input name="loan" type="number" min="0" value="{{ form.loan }}" required></label><label>Loan interest rate (%)<input name="loan_rate" type="number" step="0.01" min="0" value="{{ form.loan_rate }}" required></label>
+        <label>Existing investments<input name="existing_investment" type="number" min="0" value="{{ form.existing_investment }}" required></label><label>Planned monthly investment<input name="monthly_investment" type="number" min="0" value="{{ form.monthly_investment }}" required></label>
+        <label class="wide">Desired retirement corpus <span>(optional — blank uses 25× projected annual expenses)</span><input name="desired_corpus" type="number" min="0" value="{{ form.desired_corpus }}" placeholder="e.g. 30000000"></label></div>
+        <button type="submit">Compare my paths <span>→</span></button>
+      </form>
+    </div>
+  </section>
+  {% if results %}
+  <section class="results"><div class="result-intro"><span class="eyebrow">Your projections</span><h2>Choose the balance<br>that feels right.</h2><p>“Debt-first” is the fastest payoff path. All figures are illustrative, not advice or a guarantee.</p></div>
+    <div class="strategy-grid">{% for r in results %}<article class="strategy {% if r.name == 'debt_first' %}recommended{% endif %}"><h3>{{ r.label }} {% if r.name == 'debt_first' %}<small>FASTEST PAYOFF</small>{% endif %}</h3>{% if r.feasible %}<div class="metric"><span>Loan paid off in</span><strong>{% if r.months_to_payoff == 0 %}Now{% else %}{{ '%.1f'|format(r.payoff_years) }} years{% endif %}</strong></div><div class="metric"><span>Projected portfolio at {{ form.retirement_age }}</span><strong>{{ r.portfolio_display }}</strong></div><div class="target {% if r.gap >= 0 %}positive{% endif %}">{% if r.gap >= 0 %}Above target by{% else %}Below target by{% endif %} {{ r.gap_display }}</div>{% else %}<p class="warning">{{ r.reason }}</p>{% endif %}</article>{% endfor %}</div>
+    <div class="chart-card"><div><h3>Portfolio & debt over time</h3><p>Nominal values; loan balance uses the stated annual rate.</p></div><canvas id="projection"></canvas></div>
+    <section class="assumptions"><h3>What this plan assumes</h3><div><p><b>Income growth</b> {{ '%.1f'|format(results[0].income_growth * 100) }}%/year for your sector.</p><p><b>Expense growth</b> {{ '%.1f'|format(results[0].expense_growth * 100) }}%/year for your location.</p><p><b>Investment return</b> 10.0%/year, compounded monthly, before taxes and fees.</p><p><b>Retirement target</b> {{ results[0].target_display }}{% if not form.desired_corpus %}, based on a 4% withdrawal guideline{% endif %}.</p></div><p class="disclaimer">This educational model uses steady growth and returns, which real life does not provide. It excludes taxes, insurance, emergency savings, loan fees and market volatility. Consider a SEBI-registered investment adviser for decisions.</p></section>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>const plans={{ results|tojson }}; const ctx=document.getElementById('projection'); const labels=plans[0].annual.map(x=>x.year); new Chart(ctx,{type:'line',data:{labels,datasets:[...plans.map((p,i)=>({label:p.label+' portfolio',data:p.annual.map(x=>x.portfolio),borderColor:['#e06c47','#163a3a','#7561ad'][i],backgroundColor:'transparent',tension:.3,borderWidth:2})),{label:'Debt-first loan balance',data:plans[0].annual.map(x=>x.debt),borderColor:'#9b9183',borderDash:[6,5],tension:.3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>'₹'+(v/100000).toFixed(0)+'L'}}}}});</script>
+  {% endif %}
+</main></body></html>
