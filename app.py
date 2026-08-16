@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 from flask import Flask, render_template, request
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public", static_url_path="")
 app.config["SECRET_KEY"] = "local-development-only"
 
 SECTOR_GROWTH = {
